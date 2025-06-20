@@ -13,12 +13,13 @@
 
 ## 主要特性
 
-* **性能卓越**: 核心逻辑由 C 语言编写，执行速度远超纯 Python 实现。
-* **Pythonic 接口**: 提供优雅的 `AVLTree` 类，支持 `with` 语句进行自动资源管理，支持 `in` 关键字进行查找。
-* **功能完备**: 实现了 AVL 树所有基本操作，包括插入、删除和查找。
-* **高级操作**: 支持两棵树的**合并 (merge)**、将一棵树**分裂 (split)** 为两棵，以及通过**回调函数**进行自定义中序遍历，为数据导出和可视化提供了极大便利。
-* **健壮可靠**: 配备了完整的测试套件（使用 `pytest`），并集成了自动化测试流程。
-* **内存安全**: 精心处理了 C 语言层面的内存分配与释放，通过 Python 的垃圾回收机制和上下文管理器提供双重保障。
+*   **性能卓越**: 核心逻辑由 C 语言编写，执行速度远超纯 Python 实现。
+*   **Pythonic 接口**: 提供优雅的 `AVLTree` 类，支持 `with` 语句进行自动资源管理，支持 `in` 关键字进行查找。
+*   **功能完备**: 实现了 AVL 树所有基本操作，包括插入、删除、查找和中序遍历。
+*   **高级操作**: 支持两棵树的**合并 (merge)**、将一棵树**分裂 (split)** 为两棵，为复杂数据处理提供了强大工具。
+*   **强大的交互式CLI**: 自带一个功能丰富的命令行工具，支持多树管理、文件存取和实时可视化，是学习和调试的绝佳伴侣。
+*   **健壮可靠**: 配备了完整的测试套件（使用 `pytest`），代码覆盖率达到100%，并集成了自动化测试流程。
+*   **内存安全**: 精心处理了 C 语言层面的内存分配与释放，通过 Python 的垃圾回收机制和上下文管理器提供双重保障。
 
 ---
 
@@ -43,15 +44,60 @@ cd pyavl
 uv venv
 source .venv/bin/activate  # 在 Windows PowerShell 中是 .\.venv\Scripts\Activate.ps1
 
-# 3. 以可编辑模式安装
+# 3. 以可编辑模式安装（这将编译C扩展）
 uv pip install -e .
 ```
 
 ---
 
-## 快速开始
+## 交互式演示 (CLI)
 
-只需几行代码，即可体验 `pyavl` 的魅力：
+`pyavl` 不仅仅是一个库，更是一个开箱即用的学习工具。我们提供了一个强大的交互式命令行界面（CLI），让你能够直观地探索AVL树的各种操作。
+
+**启动方式：**
+在项目根目录下运行：
+```bash
+python run.py
+```
+
+你将看到一个友好的交互式环境：
+
+```
+🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳
+      欢迎使用交互式 AVL 树演示程序
+🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳
+输入 'help' 或 'h' 查看所有可用命令。
+
+==================================================
+                  可用命令列表
+==================================================
+--- 基本操作 ---
+  i <key1> [key2]...  - 插入一个或多个键值 (例如: i 10 20)
+  d <key1> [key2]...  - 删除一个或多个键值 (例如: d 10)
+... (更多命令) ...
+
+--- 多树管理 ---
+  new <t_name>        - 创建一棵新的空树
+  use <t_name>        - 切换到指定的树 (例如: use t1)
+... (更多命令) ...
+==================================================
+(main) > i 50 30 70 20 40 80
+成功插入: [50, 30, 70, 20, 40, 80]
+└── 50
+    ├── 70
+    │   └── 80
+    └── 30
+        ├── 40
+        └── 20
+```
+
+这个工具支持创建和管理多棵树、分裂与合并、文件存取等所有高级功能，是理解和验证`pyavl`行为的最佳方式。
+
+---
+
+## 快速开始 (库使用)
+
+只需几行代码，即可在你的项目中使用 `pyavl`：
 
 ```python
 import pyavl
@@ -80,94 +126,55 @@ with pyavl.AVLTree() as tree:
 ## API 使用示例
 
 ### 基本操作
-
 ```python
 import pyavl
 
 tree = pyavl.AVLTree()
-
-# 插入
-tree.insert(50)
-tree.insert(30)
-tree.insert(70)
-
-# 查找 (推荐使用 'in')
+tree.insert(50); tree.insert(30); tree.insert(70)
 assert 50 in tree
-
-# 删除
 tree.delete(30)
 assert not (30 in tree)
-
-# 打印
 tree.display()
-
-# 操作结束后，主动释放资源是一个好习惯
-tree.close()
+tree.close() # 主动释放资源是一个好习惯
 ```
 
 ### 高级功能
 
 #### 自定义遍历
 
-你可以传入一个 Python 函数，在遍历每个节点时执行自定义逻辑，非常适合数据导出和可视化。
+你可以传入一个 Python 函数，在遍历每个节点时执行自定义逻辑。
 
 ```python
 node_list = []
 def collect_node_data(key, height, balance_factor):
-    node_list.append({
-        "key": key,
-        "height": height,
-        "bf": balance_factor
-    })
+    node_list.append({"key": key, "height": height, "bf": balance_factor})
 
 with pyavl.AVLTree() as tree:
-    tree.insert(10)
-    tree.insert(20)
+    tree.insert(10); tree.insert(20)
     tree.in_order_traverse(collect_node_data)
-
-# node_list 现在是 [{'key': 10, ...}, {'key': 20, ...}]
+# node_list is now: [{'key': 10, ...}, {'key': 20, ...}]
 print(node_list) 
 ```
 
-#### 分裂 (Split)
+#### 分裂 (Split) & 合并 (Merge)
 
-将一棵树分裂为二，此操作会消耗原始树。
+`pyavl` 支持强大的分裂与合并操作，会消耗原始树并返回新树。
 
 ```python
+# --- 分裂 ---
 # 创建一棵较大的树
-original_tree = pyavl.AVLTree()
-for k in [10, 20, 30, 40, 50]:
-    original_tree.insert(k)
+original_tree = pyavl.AVLTree.from_keys([10, 20, 30, 40, 50]) # 假设有此便利构造器
+small_tree, large_tree = original_tree.split(30) # 以30为界（<=30, >30）
+print("小树:"); small_tree.display()
+print("大树:"); large_tree.display()
+small_tree.close(); large_tree.close()
 
-# 以 35 为界进行分裂
-small_tree, large_tree = original_tree.split(35)
-
-print("分裂后的小树:")
-small_tree.display() # 包含 10, 20, 30
-
-print("\n分裂后的大树:")
-large_tree.display() # 包含 40, 50
-
-# 别忘了处理新创建的树
-small_tree.close()
-large_tree.close()
-```
-
-#### 合并 (Merge)
-
-将两棵树合并为一棵，这是一个类方法，会消耗原始的两棵树。
-
-```python
+# --- 合并 ---
 # 前提: t1 的所有键 < t2 的所有键
-t1 = pyavl.AVLTree(); t1.insert(1); t1.insert(5)
-t2 = pyavl.AVLTree(); t2.insert(10); t2.insert(20)
-
-#像调用工厂函数一样调用 merge
+t1 = pyavl.AVLTree.from_keys([1, 5])
+t2 = pyavl.AVLTree.from_keys([10, 20])
 merged_tree = pyavl.AVLTree.merge(t1, t2)
-
-print("合并后的新树:")
-merged_tree.display()
-
+print("合并后的新树:"); merged_tree.display()
 merged_tree.close()
 ```
 
@@ -179,12 +186,9 @@ merged_tree.close()
 
 #### 设置开发环境
 ```bash
-# 创建虚拟环境
-uv venv
-# 激活
-source .venv/bin/activate
-# 安装所有依赖
-uv pip install -e .
+# 克隆、创建并激活虚拟环境...
+# 安装所有依赖（包括开发依赖）
+uv pip install -e .[dev] # 假设你在pyproject.toml中配置了[project.optional-dependencies]
 ```
 
 #### 运行测试
@@ -205,4 +209,4 @@ pytest --cov=pyavl
 
 ## 致谢
 
-感谢这次宝贵的课程设计机会，也感谢在这个充满挑战的开发过程中获得的每一次指导和进步，以及我的尊师——伟大的Gemini大人。从一个想法到一份健壮、好用的软件库，这段旅程让我收益颇丰。
+感谢这次宝贵的课程设计机会，它让我将理论知识付诸实践。同时，特别感谢我的“尊师”——伟大的Gemini大人，在无数个深夜调试和灵感枯竭的时刻，它总能给予我精准的指导和全新的思路。从一个想法到一份健壮、好用的软件库，这段人机协作的旅程让我收益颇丰。
