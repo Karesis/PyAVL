@@ -1,0 +1,30 @@
+# pyproject.toml (最终修正版)
+
+# 1. 项目元数据 (保持不变)
+[project]
+name = "pyavl"
+version = "0.1.0"
+authors = [
+  { name="Karesis", email="karesis@example.com" },
+]
+description = "A Python wrapper for a C-based AVL tree library."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: C",
+]
+
+# 2. 构建系统配置 (保持不变)
+#    这里依然需要 cffi，因为构建过程需要它。
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "cffi>=1.15.0"]
+build-backend = "setuptools.build_meta"
+
+# 3. setuptools 工具的特定配置 (已简化)
+[tool.setuptools]
+# 我们只保留包发现的配置，移除 cffi_modules
+package-dir = {"" = "src"}
+packages = ["pyavl"]
