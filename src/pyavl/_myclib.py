@@ -60,14 +60,19 @@ class AVLTree:
         if not callable(callback):
             raise TypeError("callback must be a callable function.")
 
+        c_callback = ffi.callback("void(int, int, int)", callback)
         # CFFI 会自动创建一个 trampoline，让C代码可以安全地调用 Python 函数
-        lib.avl_in_order_traverse(self._ptr, callback)
+        lib.avl_in_order_traverse(self._ptr, c_callback)
 
     def split(self, key: int):
         """
         将当前的树按给定的 key 分裂成两棵新树。
         注意：此操作会消耗原始树。
 
+        分裂规则：
+        - 小树 (small_tree) 包含所有小于或等于 `key` 的元素。
+        - 大树 (large_tree) 包含所有大于 `key` 的元素。
+        
         :param key: 分裂的基准值。
         :return: 一个元组，包含两棵新的 Tree 对象 (small_tree, large_tree)。
         """

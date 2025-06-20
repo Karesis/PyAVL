@@ -28,3 +28,18 @@ build-backend = "setuptools.build_meta"
 # 我们只保留包发现的配置，移除 cffi_modules
 package-dir = {"" = "src"}
 packages = ["pyavl"]
+
+[tool.coverage.run]
+# source 字段指定了覆盖率统计的源目录
+source = ["src/pyavl"]
+# omit 字段指定要排除的文件/目录
+omit = [
+    "src/pyavl/_cffi_build.py", # 排除CFFI构建脚本
+    "tests/*",                  # 通常也会排除测试代码本身
+]
+
+[tool.coverage.report]
+# 当覆盖率低于这个值时，构建会失败（可选，但在CI/CD中很有用）
+#fail_under = 80 
+# 在终端显示错过行号的摘要
+show_missing = true
