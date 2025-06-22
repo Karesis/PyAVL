@@ -39,3 +39,6 @@ Thumbs.db
 
 # 一些不用的，临时文件
 _test*
+
+# 为了测试python和C交互时系统api与文件缓冲的临时实验脚本
+_try.py
