@@ -1,0 +1,66 @@
+# 文件路径: .github/workflows/ci.yml
+
+# 工作流的名称
+name: PyAVL CI/CD
+
+# 触发条件：在 push 到 main 分支，或者创建 pull request 时自动运行
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# 工作流包含的任务
+jobs:
+  build_and_test:
+    # 任务名称
+    name: Build and Test on ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    
+    # 运行环境：在矩阵中定义的所有操作系统上运行
+    runs-on: ${{ matrix.os }}
+    
+    # 定义一个构建矩阵，实现跨平台、跨版本的自动化测试
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.12"] # 我们锁定在稳定的3.12版本
+
+    # 任务中的具体步骤
+    steps:
+      # 第一步：下载你的代码到虚拟机上
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 第二步：根据矩阵设置指定版本的 Python 环境
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      # 第三步：安装 uv (这是在 Linux/macOS 上的安装方式，Windows会自动适配)
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Add uv to PATH (for subsequent steps)
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        shell: bash
+
+      # 第四步：使用 uv 安装项目依赖 (包括 pytest 等开发依赖)
+      - name: Install dependencies
+        run: uv pip install -e .[dev]
+
+      # 第五步：用我们最可靠的方式编译 C 扩展
+      # 这一步至关重要，它验证了你的C代码在不同平台上的可编译性
+      - name: Build C extension inplace
+        run: python setup.py build_ext --inplace
+
+      # 第六步：运行 pytest 测试套件
+      - name: Run tests with pytest
+        run: pytest -v
+
+      # (可选，但非常酷的) 第七步：上传覆盖率报告
+      # 你需要在 https://about.codecov.io/ 网站用 GitHub 账号登录一下
+      # 然后它就能接收报告，并在你的 README 中生成一个动态的覆盖率徽章
+      #- name: Upload coverage to Codecov
+      #  uses: codecov/codecov-action@v4
+      #  with:
+      #    token: ${{ secrets.CODECOV_TOKEN }} # 需要在 GitHub 项目的 Secrets 中配置
