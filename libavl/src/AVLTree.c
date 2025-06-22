@@ -48,8 +48,7 @@ static _Node* _min_value_node(_Node* node) {
     }
     return current;
 }
-
-//【新増辅助函数】找到子树中的最大节点
+ 
 static _Node* _find_max_node(_Node* node) {
     _Node* current = node;
     while (current && current->right != NULL) {
@@ -78,7 +77,6 @@ static _Node* _left_rotate(_Node* x) {
     return y;
 }
 
-//【新増辅助函数】更新高度并进行再平衡，返回平衡后的新根
 static _Node* _rebalance(_Node* node) {
     if (node == NULL) return NULL;
 
@@ -154,25 +152,53 @@ static _Node* _delete_recursive(_Node* root, int key) {
     return _rebalance(root);
 }
 
+static int _count_nodes(const _Node* node) {
+    // 基本情况：如果节点为空，则其下的节点数为 0
+    if (node == NULL) {
+        return 0;
+    }
+    // 递归步骤：节点总数 = 1 (当前节点) + 左子树节点数 + 右子树节点数
+    return 1 + _count_nodes(node->left) + _count_nodes(node->right);
+}
 
-static void _print_visual(const _Node* node, const char* prefix, int isTail) {
+static void _visual_to_buffer(
+    const _Node* node,
+    const char* prefix,
+    int isTail,
+    // --- 新增的参数 ---
+    char* buffer,       // 目标缓冲区
+    int* offset,        // 当前写入位置的指针
+    int size            // 缓冲区总大小
+) {
     if (node == NULL) return;
 
-    printf("%s", prefix);
-    printf(isTail ? "└── " : "├── ");
-    printf("%d\n", node->key);
+    // 检查缓冲区是否已满 (预留1字节给末尾的'\0')
+    if (*offset >= size - 1) return;
 
+    // [核心修改] 不再使用 printf，而是用 snprintf 写入到 buffer
+    int written = snprintf(
+        buffer + *offset,       // 从当前位置开始写
+        size - *offset,         // 缓冲区剩余空间
+        "%s%s%d\n",             // 格式不变
+        prefix,
+        isTail ? "└── " : "├── ",
+        node->key
+    );
+
+    // 更新写入位置
+    *offset += written;
+    
     char newPrefix[256];
-    sprintf(newPrefix, "%s%s", prefix, isTail ? "    " : "│   ");
+    // 这里使用更兼容的四个空格
+    snprintf(newPrefix, sizeof(newPrefix), "%s%s", prefix, isTail ? "    " : "│   ");
 
-    // 修改了这里的逻辑，确保左右子树都能正确打印
     if (node->left != NULL && node->right != NULL) {
-        _print_visual(node->right, newPrefix, 0); // 先打印右边，树看起来更直观
-        _print_visual(node->left, newPrefix, 1);
+        _visual_to_buffer(node->right, newPrefix, 0, buffer, offset, size); // 递归调用也使用新函数
+        _visual_to_buffer(node->left,  newPrefix, 1, buffer, offset, size);
     } else if (node->right != NULL) {
-        _print_visual(node->right, newPrefix, 1);
+        _visual_to_buffer(node->right, newPrefix, 1, buffer, offset, size);
     } else if (node->left != NULL) {
-        _print_visual(node->left, newPrefix, 1);
+        _visual_to_buffer(node->left,  newPrefix, 1, buffer, offset, size);
     }
 }
 
@@ -227,13 +253,56 @@ int avl_search(const AVLTree tree, int key) {
     return 0; // 未找到
 }
 
-void avl_display(const AVLTree tree) {
+/**
+ * @brief [改造后的公共API] 将AVL树的视觉表示形式写入用户提供的缓冲区。
+ * * @param tree 指向AVL树的指针 (即根节点)。
+ * @param out_buffer Python提供的用于写入的缓冲区。
+ * @param buffer_size 缓冲区的总大小。
+ */
+void avl_display_to_buffer(const AVLTree tree, char* out_buffer, int buffer_size) {
+    // 1. 安全检查
+    if (out_buffer == NULL || buffer_size <= 0) {
+        return; 
+    }
+    // 确保缓冲区在开始时是一个有效的空字符串
+    out_buffer[0] = '\0';
+
+    // 2. 处理空树的情况
     if (tree == NULL) {
-        printf("树是空的。\n");
+        snprintf(out_buffer, buffer_size, "树是空的。\n");
         return;
     }
-    _print_visual(tree, "", 1);
-    printf("\n");
+
+    // 3. 初始化写入位置并开始递归
+    int offset = 0;
+    _visual_to_buffer(tree, "", 1, out_buffer, &offset, buffer_size);
+}
+
+void avl_display(const AVLTree tree) {
+    // 创建一个足够大的临时栈缓冲区
+    char buffer[4096];
+    
+    // 调用新函数将内容写入缓冲区
+    avl_display_to_buffer(tree, buffer, sizeof(buffer));
+    
+    // 然后用 printf 打印缓冲区的内容
+    printf("%s", buffer);
+}
+
+int avl_get_height(const AVLTree tree) {
+    // 将公共的、不透明的 AVLTree 指针转换为内部的 _Node 指针
+    _Node* root = (_Node*)tree;
+    
+    if (root == NULL) {
+        return 0; 
+    }
+    
+    return root->height; 
+}
+
+int avl_get_count(const AVLTree tree) {
+    // 直接调用我们的递归辅助函数
+    return _count_nodes((const _Node*)tree);
 }
 
 /* --- 选做内容：合并与分裂 --- */

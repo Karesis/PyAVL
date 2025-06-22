@@ -55,8 +55,10 @@ int avl_search(const AVLTree tree, int key);
  * @brief 以美观、可视化的方式打印整棵树的结构。
  * @param tree 树的句柄。此操作不会修改树，故使用const。
  */
-void avl_display(const AVLTree tree);
+void avl_display_to_buffer(const AVLTree tree, char* out_buffer, int buffer_size);
 
+//  简单的打印函数
+void avl_display(const AVLTree tree);
 
 /* --- 选做内容：公共API函数声明 --- */
 
@@ -83,5 +85,19 @@ typedef void (*avl_traverse_callback)(int key, int height, int bf);
 
 // 声明新的遍历函数
 void avl_in_order_traverse(AVLTree tree, avl_traverse_callback callback);
+
+/**
+ * @brief 获取AVL树中的节点总数。
+ * @param tree 树的句柄。
+ * @return 返回节点数量。如果树为空，返回0。
+ */
+int avl_get_count(const AVLTree tree);
+
+/**
+ * @brief 获取AVL树的高度。
+ * @param tree 树的句柄。
+ * @return 返回树的高度。空树高度为-1或0，取决于你的定义。
+ */
+int avl_get_height(const AVLTree tree);
 
 #endif /* AVLTREE_H */

@@ -15,7 +15,9 @@ ffibuilder.cdef("""
     AVLTree avl_insert(AVLTree tree, int key);
     AVLTree avl_delete(AVLTree tree, int key);
     int avl_search(const AVLTree tree, int key);
-    void avl_display(const AVLTree tree);
+    int avl_get_count(const AVLTree tree);
+    int avl_get_height(const AVLTree tree);            
+    void avl_display_to_buffer(const AVLTree tree, char* out_buffer, int buffer_size);
 
     /* --- 选做内容：公共API函数声明 --- */
     AVLTree avl_merge(AVLTree T1, AVLTree T2);
