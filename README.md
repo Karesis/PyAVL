@@ -37,8 +37,8 @@ pip install pyavl
 目前，你可以直接从源代码进行安装：
 ```bash
 # 1. 克隆仓库
-git clone [https://github.com/Karesis/PyAVL.git](https://github.com/Karesis/PyAVL.git)
-cd PyAVL  # 注意大小写
+git clone https://github.com/Karesis/PyAVL.git
+cd PyAVL
 
 # 2. (推荐) 创建并激活虚拟环境
 uv venv
