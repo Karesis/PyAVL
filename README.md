@@ -172,7 +172,7 @@ merged_tree.close()
 ```bash
 # 克隆、创建并激活虚拟环境...
 # 安装所有依赖（包括开发依赖）
-uv pip install -e .[dev]
+uv pip install -e .
 ```
 
 #### 运行测试
